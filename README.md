@@ -1,6 +1,6 @@
 # MT-Free-Hunter
 
-![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
@@ -295,7 +295,7 @@ A: 收藏 API 需要完整的认证，某些 Token 可能没有此权限。
 
 ## 更新日志
 
-### v1.4.0 (2025-12)
+### v1.4.1 (2025-12)
 - 修复剩余免费时间不实时更新的问题（现在每秒更新倒计时）
 - 倒计时会根据页面加载后经过的时间自动减少
 - 状态颜色会随时间变化自动更新
@@ -637,7 +637,7 @@ A: The favorite API requires full authentication, some tokens may not have this 
 
 ## Changelog
 
-### v1.4.0 (2025-12)
+### v1.4.1 (2025-12)
 - Fix remaining free time not updating in real-time (now counts down every second)
 - Countdown automatically decreases based on elapsed time since page load
 - Status colors automatically update as time progresses
