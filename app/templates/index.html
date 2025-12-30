@@ -214,6 +214,81 @@
             color: var(--apple-text);
         }
 
+        /* ============ iOS-style Toggle Switch ============ */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: var(--apple-text-secondary);
+            white-space: nowrap;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 42px;
+            height: 25px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--apple-text-tertiary);
+            transition: all 0.3s ease;
+            border-radius: 25px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 21px;
+            width: 21px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--apple-green);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(17px);
+        }
+
+        input:disabled + .toggle-slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .toggle-info-icon {
+            font-size: 14px;
+            color: var(--apple-text-tertiary);
+            cursor: help;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-info-icon:hover {
+            color: var(--apple-text-secondary);
+        }
+
         /* ============ Main Content ============ */
         .main-content {
             padding: 24px 0;
@@ -252,11 +327,6 @@
         .search-input:focus {
             outline: none;
             border-color: var(--apple-blue);
-            box-shadow: 0 0 0 4px rgba(2,132,199,0.15);
-        }
-
-        [data-theme="dark"] .search-input:focus {
-            box-shadow: 0 0 0 4px rgba(56,189,248,0.2);
         }
 
         .search-input::placeholder {
@@ -324,11 +394,6 @@
         .filter-select:focus {
             outline: none;
             border-color: var(--apple-blue);
-            box-shadow: 0 0 0 4px rgba(2,132,199,0.15);
-        }
-
-        [data-theme="dark"] .filter-select:focus {
-            box-shadow: 0 0 0 4px rgba(56,189,248,0.2);
         }
 
         /* Button Groups */
@@ -415,9 +480,8 @@
         }
 
         .filter-toggle-btn.has-filters {
-            background: var(--apple-blue);
-            border-color: var(--apple-blue);
-            color: var(--btn-primary-text);
+            background: var(--apple-bg-secondary);
+            border-color: var(--apple-border);
         }
 
         /* ============ Bottom Sheet Drawer ============ */
@@ -1440,6 +1504,15 @@
                 </div>
                 <div class="nav-divider"></div>
                 <div class="nav-actions">
+                    <div class="toggle-container">
+                        <span class="toggle-label" data-i18n="autoDelete">自动删除</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoDeleteToggle" onchange="toggleAutoDelete()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-info-icon" title="当免费状态变为非免费且未下载完时，自动从qBittorrent删除种子 | Auto-delete torrents from qBittorrent when free status changes and download is incomplete">ⓘ</span>
+                    </div>
+                    <div class="nav-divider"></div>
                     <button class="nav-btn" id="themeToggle" onclick="toggleTheme()">
                         <span id="themeIcon">☀️</span>
                     </button>
@@ -1695,7 +1768,11 @@
                 ratioDiff: '差距',
                 filterTitle: '筛选条件',
                 applyFilters: '应用筛选',
-                searchBtn: '搜索'
+                searchBtn: '搜索',
+                autoDelete: '自动删除',
+                autoDeleteEnabled: '自动删除已启用',
+                autoDeleteDisabled: '自动删除已禁用',
+                autoDeleteError: '切换失败，请检查配置'
             },
             'en': {
                 subtitle: 'M team Seeding Helper',
@@ -1740,7 +1817,11 @@
                 ratioDiff: 'Gap',
                 filterTitle: 'Filters',
                 applyFilters: 'Apply Filters',
-                searchBtn: 'Search'
+                searchBtn: 'Search',
+                autoDelete: 'Auto Delete',
+                autoDeleteEnabled: 'Auto-delete enabled',
+                autoDeleteDisabled: 'Auto-delete disabled',
+                autoDeleteError: 'Toggle failed, please check config'
             }
         };
 
@@ -1760,6 +1841,11 @@
         function formatRemainingTime(hours, lang) {
             if (hours <= 0) {
                 return lang === 'zh' ? '已结束' : 'Ended';
+            }
+
+            // Handle permanent free (Infinity)
+            if (!isFinite(hours)) {
+                return lang === 'zh' ? '永久免费' : 'Permanent';
             }
 
             const totalMinutes = Math.floor(hours * 60);
@@ -2134,6 +2220,53 @@
             btn.disabled = false;
         }
 
+        // ============ Auto Delete ============
+        async function loadAutoDeleteStatus() {
+            // Load auto-delete status from backend
+            try {
+                const response = await fetch('/api/auto-delete/status');
+                const result = await response.json();
+                const toggle = document.getElementById('autoDeleteToggle');
+
+                if (toggle) {
+                    toggle.checked = result.enabled || false;
+                    toggle.disabled = !result.qbittorrent_configured;
+                }
+            } catch (e) {
+                console.error('Failed to load auto-delete status:', e);
+            }
+        }
+
+        async function toggleAutoDelete() {
+            // Toggle auto-delete feature
+            const toggle = document.getElementById('autoDeleteToggle');
+            const originalState = toggle.checked;
+
+            try {
+                const response = await fetch('/api/auto-delete/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    toggle.checked = result.enabled;
+                    const message = result.enabled ?
+                        TRANSLATIONS[currentLang].autoDeleteEnabled :
+                        TRANSLATIONS[currentLang].autoDeleteDisabled;
+                    showToast(message, 'success');
+                } else {
+                    // Revert toggle state on failure
+                    toggle.checked = !originalState;
+                    showToast(result.message || TRANSLATIONS[currentLang].autoDeleteError, 'error');
+                }
+            } catch (e) {
+                // Revert toggle state on error
+                toggle.checked = !originalState;
+                showToast(TRANSLATIONS[currentLang].autoDeleteError, 'error');
+            }
+        }
+
         function showToast(message, type) {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -2166,6 +2299,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             setTheme(currentTheme);
             setLanguage(currentLang);
+
+            // Load auto-delete status
+            loadAutoDeleteStatus();
 
             // Search on Enter key
             document.getElementById('searchInput').addEventListener('keypress', function(e) {

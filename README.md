@@ -1,6 +1,6 @@
 # MT-Free-Hunter
 
-![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)
+![Version](https://img.shields.io/badge/version-1.5.3-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
@@ -34,6 +34,7 @@ M-Team 免费种子猎手 - 自动追踪 Free/2xFree 种子
 | Docker 一键部署 |
 | 安全加固（XSS防护、速率限制）|
 | PushPlus 微信推送预警 |
+| qBittorrent 集成与自动删除 |
 
 ---
 
@@ -81,6 +82,11 @@ RIVAL_USER_ID=
 
 # PushPlus Token（可选，用于微信推送预警）
 PUSHPLUS_TOKEN=
+
+# qBittorrent Web UI 配置（可选，用于自动删除功能）
+QBITTORRENT_URL=http://localhost:8080
+QBITTORRENT_USER=admin
+QBITTORRENT_PASSWORD=adminadmin
 ```
 
 ### 3. 启动服务
@@ -106,6 +112,9 @@ docker-compose up -d
 | `API_DELAY` | API 请求间隔（秒） | `1` |
 | `RIVAL_USER_ID` | 对手用户ID，用于分享率对比 | - |
 | `PUSHPLUS_TOKEN` | PushPlus 微信推送 Token | - |
+| `QBITTORRENT_URL` | qBittorrent Web UI 地址 | `http://localhost:8080` |
+| `QBITTORRENT_USER` | qBittorrent Web UI 用户名 | `admin` |
+| `QBITTORRENT_PASSWORD` | qBittorrent Web UI 密码 | `adminadmin` |
 
 ### 获取 API Token
 
@@ -126,6 +135,17 @@ docker-compose up -d
 1. 访问 https://www.pushplus.plus/
 2. 使用微信扫码登录
 3. 在个人中心复制 Token
+
+### 配置 qBittorrent Web UI
+
+1. 打开 qBittorrent
+2. 进入 "工具" → "选项" → "Web UI"
+3. 勾选 "启用 Web 用户界面(远程控制)"
+4. 设置端口（默认 8080）
+5. 设置用户名和密码
+6. 点击"确定"保存
+
+**注意:** 自动删除功能需要配置 qBittorrent Web UI。当免费剩余时间 < 10 分钟或免费状态变为非免费且未下载完时，系统会自动从 qBittorrent 删除种子和文件。自动删除功能独立于 PushPlus，无需配置推送也可使用。
 
 ---
 
@@ -168,6 +188,37 @@ Content-Type: application/json
 {
     "id": "torrent_id",
     "make": true
+}
+```
+
+### 自动删除控制
+
+**获取自动删除状态:**
+
+```
+GET /api/auto-delete/status
+```
+
+响应示例:
+```json
+{
+    "enabled": false,
+    "qbittorrent_configured": true
+}
+```
+
+**切换自动删除状态:**
+
+```
+POST /api/auto-delete/toggle
+```
+
+响应示例:
+```json
+{
+    "success": true,
+    "enabled": true,
+    "message": "自动删除已启用"
 }
 ```
 
@@ -295,6 +346,27 @@ A: 收藏 API 需要完整的认证，某些 Token 可能没有此权限。
 
 ## 更新日志
 
+### v1.5.3 (2025-12)
+- 修复自动刷新间隔问题：现在刷新周期更准确（扣除数据获取时间）
+- 改进 .env.example 文档：添加 Docker 网络配置说明（host.docker.internal）
+- 添加刷新耗时日志输出
+
+### v1.5.2 (2025-12)
+- 自动删除功能独立于 PushPlus，无需配置推送也可使用
+- 修复：即使未配置 PUSHPLUS_TOKEN，仍会追踪免费种子历史（用于变节检测）
+
+### v1.5.1 (2025-12)
+- 自动删除触发时机优化：免费剩余时间 < 10 分钟时即触发删除（更安全）
+- 自动删除现在会同时删除种子和文件（释放存储空间）
+- PushPlus 通知包含删除结果（成功/失败/未找到）
+
+### v1.5.0 (2025-12)
+- qBittorrent Web UI 集成
+- 自动删除功能：免费变收费时自动从 qBittorrent 删除未完成种子
+- 通过 M-Team ID 匹配 qBittorrent 中的种子
+- iOS 风格的界面切换开关
+- 自动删除状态通知
+
 ### v1.4.1 (2025-12)
 - 修复剩余免费时间不实时更新的问题（现在每秒更新倒计时）
 - 倒计时会根据页面加载后经过的时间自动减少
@@ -376,6 +448,7 @@ MIT License
 | Docker one-click deployment |
 | Security hardened (XSS protection, rate limiting) |
 | PushPlus WeChat push notifications |
+| qBittorrent integration and auto-delete |
 
 ---
 
@@ -423,6 +496,11 @@ RIVAL_USER_ID=
 
 # PushPlus Token (Optional, for WeChat push notifications)
 PUSHPLUS_TOKEN=
+
+# qBittorrent Web UI Configuration (Optional, for auto-delete feature)
+QBITTORRENT_URL=http://localhost:8080
+QBITTORRENT_USER=admin
+QBITTORRENT_PASSWORD=adminadmin
 ```
 
 ### 3. Start Service
@@ -636,6 +714,27 @@ A: The favorite API requires full authentication, some tokens may not have this 
 ---
 
 ## Changelog
+
+### v1.5.3 (2025-12)
+- Fix auto-refresh interval: now more accurate (accounts for fetch time)
+- Improve .env.example docs: add Docker network config notes (host.docker.internal)
+- Add refresh timing log output
+
+### v1.5.2 (2025-12)
+- Auto-delete now works independently of PushPlus (no push token required)
+- Fix: Free torrent history tracking works even without PUSHPLUS_TOKEN configured
+
+### v1.5.1 (2025-12)
+- Auto-delete trigger optimization: deletes when free time < 10 minutes remaining (safer)
+- Auto-delete now removes both torrent and files (frees storage space)
+- PushPlus notifications include deletion result (success/failure/not found)
+
+### v1.5.0 (2025-12)
+- qBittorrent Web UI integration
+- Auto-delete feature: automatically delete incomplete torrents when free status changes
+- Match torrents in qBittorrent by M-Team ID
+- iOS-style toggle switch in UI
+- Auto-delete status notification
 
 ### v1.4.1 (2025-12)
 - Fix remaining free time not updating in real-time (now counts down every second)
