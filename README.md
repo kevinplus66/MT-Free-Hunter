@@ -1,6 +1,6 @@
 # MT-Free-Hunter
 
-![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
@@ -294,6 +294,10 @@ A: 收藏 API 需要完整的认证，某些 Token 可能没有此权限。
 ---
 
 ## 更新日志
+
+### v1.3.1 (2025-12)
+- 修复免费种子搜索数量限制问题（pageSize 100→200）
+- 修复部分做种/下载中种子状态不显示的问题
 
 ### v1.3.0 (2025-12)
 - PushPlus 微信推送预警功能
@@ -627,6 +631,10 @@ A: The favorite API requires full authentication, some tokens may not have this 
 ---
 
 ## Changelog
+
+### v1.3.1 (2025-12)
+- Fix free torrent search limit issue (pageSize 100→200)
+- Fix some seeding/leeching torrent status not displaying
 
 ### v1.3.0 (2025-12)
 - PushPlus WeChat push notification feature
