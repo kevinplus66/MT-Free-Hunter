@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M team 做种助手</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="apple-touch-icon" href="/static/favicon.png">
+    <style>
+        /* ============ Slate + Sky Design System ============ */
+        :root {
+            /* Slate Colors - Light (Optimized) */
+            --apple-bg: #f8fafc;
+            --apple-bg-secondary: #ffffff;
+            --apple-bg-tertiary: #f1f5f9;
+            --apple-text: #0f172a;
+            --apple-text-secondary: #64748b;
+            --apple-text-tertiary: #94a3b8;
+            --apple-link: #0284c7;
+            --apple-link-hover: #0369a1;
+            --apple-border: #e2e8f0;
+            --apple-border-light: #e2e8f0;
+
+            /* Sky Primary + System Colors */
+            --apple-blue: #0284c7;
+            --apple-blue-light: #0ea5e9;
+            --apple-blue-dark: #0369a1;
+            --apple-green: #10b981;
+            --apple-orange: #f59e0b;
+            --apple-red: #ef4444;
+            --apple-yellow: #eab308;
+            --apple-purple: #8b5cf6;
+            --apple-pink: #ec4899;
+            --apple-teal: #06b6d4;
+
+            /* Button text colors */
+            --btn-primary-text: #ffffff;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.08);
+            --shadow-md: 0 4px 6px rgba(15,23,42,0.04), 0 10px 15px rgba(15,23,42,0.08);
+            --shadow-lg: 0 10px 25px rgba(15,23,42,0.08), 0 20px 40px rgba(15,23,42,0.12);
+            --shadow-hover: 0 8px 20px rgba(15,23,42,0.12), 0 16px 32px rgba(15,23,42,0.16);
+        }
+
+        [data-theme="dark"] {
+            /* Slate Colors - Dark (Optimized) */
+            --apple-bg: #0f172a;
+            --apple-bg-secondary: #1e293b;
+            --apple-bg-tertiary: #334155;
+            --apple-text: #f8fafc;
+            --apple-text-secondary: #94a3b8;
+            --apple-text-tertiary: #64748b;
+            --apple-link: #38bdf8;
+            --apple-link-hover: #7dd3fc;
+            --apple-border: #1e293b;
+            --apple-border-light: #1e293b;
+
+            /* Sky Primary (lighter for dark mode) */
+            --apple-blue: #38bdf8;
+            --apple-blue-light: #7dd3fc;
+            --apple-blue-dark: #0ea5e9;
+
+            /* Button text colors - dark text on bright Sky buttons */
+            --btn-primary-text: #0f172a;
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.2), 0 10px 15px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.3), 0 20px 40px rgba(0,0,0,0.4);
+            --shadow-hover: 0 8px 20px rgba(0,0,0,0.4), 0 16px 32px rgba(0,0,0,0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            min-height: 100vh;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+            color: var(--apple-text);
+            background: var(--apple-bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body.drawer-open {
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* ============ Navigation Bar (Frosted Glass) ============ */
+        .navbar {
+            background: rgba(248, 250, 252, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        [data-theme="dark"] .navbar {
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 52px;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--apple-text);
+            letter-spacing: -0.01em;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* User Stats in Navbar */
+        .nav-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .nav-stat-icon {
+            font-size: 14px;
+        }
+
+        .nav-stat-label {
+            color: var(--apple-text-tertiary);
+            font-size: 12px;
+        }
+
+        .nav-stat-value {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .nav-stat-value.ratio { color: var(--apple-green); }
+        .nav-stat-value.upload { color: var(--apple-green); }
+        .nav-stat-value.download { color: var(--apple-orange); }
+
+        .nav-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--apple-border);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--apple-text-secondary);
+            font-size: 14px;
+            font-weight: 400;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            line-height: 1;
+        }
+
+        .nav-btn:hover {
+            background: var(--apple-border-light);
+            color: var(--apple-text);
+        }
+
+        /* ============ Main Content ============ */
+        .main-content {
+            padding: 24px 0;
+        }
+
+        /* ============ Filter Card - Desktop ============ */
+        .filter-card {
+            background: var(--apple-bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--apple-border-light);
+        }
+
+        /* Search Row */
+        .search-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            flex: 1;
+            height: 40px;
+            padding: 0 16px;
+            border: 1px solid var(--apple-border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--apple-bg);
+            color: var(--apple-text);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 4px rgba(2,132,199,0.15);
+        }
+
+        [data-theme="dark"] .search-input:focus {
+            box-shadow: 0 0 0 4px rgba(56,189,248,0.2);
+        }
+
+        .search-input::placeholder {
+            color: var(--apple-text-tertiary);
+        }
+
+        .search-btn {
+            height: 40px;
+            padding: 0 20px;
+            background: var(--apple-blue);
+            color: var(--btn-primary-text);
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            background: var(--apple-blue-dark, var(--apple-link-hover));
+        }
+
+        /* Dropdown Grid */
+        .filter-dropdowns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .filter-dropdown {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-dropdown-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--apple-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .filter-select {
+            height: 40px;
+            background: var(--apple-bg);
+            border: 1px solid var(--apple-border);
+            border-radius: 10px;
+            padding: 0 36px 0 14px;
+            font-size: 14px;
+            color: var(--apple-text);
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2386868b' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 4px rgba(2,132,199,0.15);
+        }
+
+        [data-theme="dark"] .filter-select:focus {
+            box-shadow: 0 0 0 4px rgba(56,189,248,0.2);
+        }
+
+        /* Button Groups */
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--apple-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pill {
+            height: 32px;
+            padding: 0 14px;
+            background: var(--apple-bg);
+            border: 1px solid var(--apple-border);
+            color: var(--apple-text);
+            border-radius: 980px;
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pill:hover {
+            border-color: var(--apple-blue);
+        }
+
+        .pill.active {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: var(--btn-primary-text);
+        }
+
+        /* ============ Mobile Filter Bar ============ */
+        .mobile-filter-bar {
+            display: none;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mobile-filter-bar .search-input {
+            flex: 1;
+        }
+
+        .filter-toggle-btn {
+            height: 40px;
+            width: 40px;
+            background: var(--apple-bg-secondary);
+            border: 1px solid var(--apple-border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .filter-toggle-btn:hover {
+            background: var(--apple-border-light);
+        }
+
+        .filter-toggle-btn.has-filters {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: var(--btn-primary-text);
+        }
+
+        /* ============ Bottom Sheet Drawer ============ */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .filter-drawer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--apple-bg);
+            border-radius: 20px 20px 0 0;
+            z-index: 1001;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            padding: 0 20px 34px;
+        }
+
+        .filter-drawer.active {
+            transform: translateY(0);
+        }
+
+        .drawer-handle {
+            display: flex;
+            justify-content: center;
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            background: var(--apple-bg);
+            z-index: 1;
+        }
+
+        .drawer-handle-bar {
+            width: 36px;
+            height: 5px;
+            background: var(--apple-border);
+            border-radius: 3px;
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 20px;
+            border-bottom: 1px solid var(--apple-border-light);
+            margin-bottom: 20px;
+        }
+
+        .drawer-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--apple-text);
+        }
+
+        .drawer-close {
+            background: var(--apple-bg-secondary);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--apple-text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .drawer-close:hover {
+            background: var(--apple-border-light);
+            color: var(--apple-text);
+        }
+
+        .drawer-section {
+            margin-bottom: 24px;
+        }
+
+        .drawer-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--apple-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-bottom: 12px;
+        }
+
+        .drawer-select {
+            width: 100%;
+            height: 44px;
+            background: var(--apple-bg-secondary);
+            border: 1px solid var(--apple-border);
+            border-radius: 10px;
+            padding: 0 36px 0 14px;
+            font-size: 15px;
+            color: var(--apple-text);
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2386868b' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .drawer-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .drawer-pills .pill {
+            height: 36px;
+            padding: 0 16px;
+            font-size: 14px;
+        }
+
+        .drawer-apply-btn {
+            width: 100%;
+            height: 50px;
+            background: var(--apple-blue);
+            color: var(--btn-primary-text);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+
+        .drawer-apply-btn:hover {
+            background: var(--apple-blue-dark, var(--apple-link-hover));
+        }
+
+        /* ============ Progress Ring ============ */
+        .progress-ring {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .progress-ring svg {
+            display: block;
+            width: 12px;
+            height: 12px;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring .bg {
+            fill: none;
+            stroke: rgba(2,132,199,0.25);
+            stroke-width: 2;
+        }
+
+        [data-theme="dark"] .progress-ring .bg {
+            stroke: rgba(56,189,248,0.3);
+        }
+
+        .progress-ring .progress {
+            fill: none;
+            stroke: var(--apple-blue);
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .badge-leeching {
+            display: inline-flex !important;
+            align-items: center;
+            text-transform: none !important;
+        }
+
+        /* ============ Action Bar ============ */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .results-info {
+            font-size: 14px;
+            color: var(--apple-text-secondary);
+        }
+
+        .refresh-btn-subtle {
+            background: transparent;
+            color: var(--apple-text-secondary);
+            border: 1px solid var(--apple-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .refresh-btn-subtle:hover {
+            background: var(--apple-bg-secondary);
+            color: var(--apple-text);
+            border-color: var(--apple-text-tertiary);
+        }
+
+        .refresh-btn-subtle:disabled {
+            color: var(--apple-text-tertiary);
+            cursor: not-allowed;
+        }
+
+        /* ============ Table Card ============ */
+        .table-card {
+            background: var(--apple-bg);
+            border-radius: 16px;
+            border: 1px solid var(--apple-border-light);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--apple-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: var(--apple-bg-secondary);
+            border-bottom: 1px solid var(--apple-border-light);
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            color: var(--apple-text);
+        }
+
+        th .sort-icon {
+            margin-left: 4px;
+            opacity: 0.4;
+            font-size: 10px;
+        }
+
+        th.sorted .sort-icon {
+            opacity: 1;
+            color: var(--apple-blue);
+        }
+
+        /* Column widths */
+        th:nth-child(1), td:nth-child(1) { width: 40%; }
+        th:nth-child(2), td:nth-child(2) { width: 8%; }
+        th:nth-child(3), td:nth-child(3) { width: 10%; }
+        th:nth-child(4), td:nth-child(4) { width: 8%; }
+        th:nth-child(5), td:nth-child(5) { width: 12%; }
+        th:nth-child(6), td:nth-child(6) { width: 10%; }
+        th:nth-child(7), td:nth-child(7) { width: 6%; }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--apple-border-light);
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr {
+            transition: background 0.15s ease;
+        }
+
+        tr:hover td {
+            background: var(--apple-bg-tertiary);
+        }
+
+        /* ============ Torrent Name ============ */
+        .torrent-name a {
+            color: var(--apple-link);
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color 0.15s ease;
+        }
+
+        .torrent-name a:hover {
+            color: var(--apple-link-hover);
+            text-decoration: underline;
+        }
+
+        .torrent-descr {
+            font-size: 12px;
+            color: var(--apple-text-tertiary);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ============ Peers ============ */
+        .peer-info {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .seeders {
+            color: var(--apple-green);
+            font-weight: 600;
+        }
+
+        .leechers {
+            color: var(--apple-orange);
+            font-weight: 600;
+        }
+
+        /* ============ Badges ============ */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 980px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-free {
+            background: rgba(52,199,89,0.12);
+            color: var(--apple-green);
+        }
+
+        .badge-2xfree {
+            background: rgba(175,82,222,0.12);
+            color: var(--apple-purple);
+        }
+
+        .badge-seeding {
+            background: rgba(52,199,89,0.12);
+            color: var(--apple-green);
+        }
+
+        .badge-leeching {
+            background: rgba(2,132,199,0.12);
+            color: var(--apple-blue);
+        }
+
+        [data-theme="dark"] .badge-leeching {
+            background: rgba(56,189,248,0.15);
+        }
+
+        .badge-none {
+            background: var(--apple-bg-secondary);
+            color: var(--apple-text-tertiary);
+        }
+
+        /* ============ Remaining Time ============ */
+        .remaining-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.green { background: var(--apple-green); }
+        .status-dot.yellow { background: var(--apple-yellow); }
+        .status-dot.orange { background: var(--apple-orange); }
+        .status-dot.red { background: var(--apple-red); }
+
+        .status-green { color: var(--apple-green); }
+        .status-yellow { color: #b59800; }
+        .status-orange { color: var(--apple-orange); }
+        .status-red { color: var(--apple-red); }
+
+        /* ============ Star Button ============ */
+        .star-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--apple-border);
+            transition: all 0.2s ease;
+            padding: 4px;
+        }
+
+        .star-btn:hover {
+            color: var(--apple-yellow);
+            transform: scale(1.15);
+        }
+
+        .star-btn.collected {
+            color: var(--apple-yellow);
+        }
+
+        /* ============ Empty State ============ */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            color: var(--apple-text-secondary);
+            font-size: 17px;
+        }
+
+        /* ============ Footer ============ */
+        .footer {
+            text-align: center;
+            padding: 24px 0;
+            color: var(--apple-text-tertiary);
+            font-size: 12px;
+            border-top: 1px solid var(--apple-border-light);
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: var(--apple-link);
+            text-decoration: none;
+        }
+
+        /* ============ Loading Overlay ============ */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--apple-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loading-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--apple-border-light);
+            border-top-color: var(--apple-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        [data-theme="dark"] .loading-spinner {
+            border-color: var(--apple-border);
+            border-top-color: var(--apple-blue);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============ Toast ============ */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            animation: toastIn 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .toast.success {
+            background: var(--apple-green);
+            color: #fff;
+        }
+
+        .toast.error {
+            background: var(--apple-red);
+            color: #fff;
+        }
+
+        @keyframes toastIn {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @keyframes toastOut {
+            from { transform: translateX(-50%) translateY(0); opacity: 1; }
+            to { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        }
+
+        /* ============ Error Banner ============ */
+        .error-banner {
+            background: rgba(255,59,48,0.1);
+            border: 1px solid var(--apple-red);
+            color: var(--apple-red);
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ============ Back to Top Button ============ */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--apple-blue);
+            color: var(--btn-primary-text);
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .back-to-top:hover {
+            background: var(--apple-blue-dark, var(--apple-link-hover));
+            transform: translateY(0) scale(1.05);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* ============ Scrollbar ============ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--apple-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--apple-text-tertiary);
+        }
+
+        /* ============ Tablet Responsive ============ */
+        @media (min-width: 769px) and (max-width: 1200px) {
+            .container {
+                padding: 0 24px;
+            }
+
+            .navbar-content {
+                padding: 0 24px;
+            }
+
+            .nav-stat-label {
+                display: none;
+            }
+
+            table {
+                min-width: 1000px;
+                table-layout: fixed;
+            }
+
+            th:nth-child(n+2),
+            td:nth-child(n+2) {
+                white-space: nowrap;
+            }
+
+            th:nth-child(1), td:nth-child(1) { width: 35%; min-width: 300px; }
+            th:nth-child(2), td:nth-child(2) { width: 10%; min-width: 80px; }
+            th:nth-child(3), td:nth-child(3) { width: 12%; min-width: 100px; }
+            th:nth-child(4), td:nth-child(4) { width: 10%; min-width: 90px; }
+            th:nth-child(5), td:nth-child(5) { width: 14%; min-width: 120px; }
+            th:nth-child(6), td:nth-child(6) { width: 12%; min-width: 100px; }
+            th:nth-child(7), td:nth-child(7) { width: 7%; min-width: 60px; }
+
+            .badge, .remaining-time, .peer-info {
+                white-space: nowrap;
+            }
+        }
+
+        /* ============ Mobile Responsive ============ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            /* Navbar Mobile */
+            .navbar-content {
+                padding: 0 16px;
+                height: 52px;
+            }
+
+            .logo-text {
+                font-size: 14px;
+            }
+
+            /* Hide non-essential stats on mobile */
+            .nav-stat.secondary {
+                display: none;
+            }
+
+            .nav-stat-label {
+                display: none;
+            }
+
+            .nav-stat-icon {
+                display: none;
+            }
+
+            .nav-stats {
+                gap: 8px;
+            }
+
+            .nav-stat-value {
+                font-size: 12px;
+            }
+
+            .nav-divider {
+                height: 16px;
+            }
+
+            .nav-btn {
+                padding: 6px 8px;
+                font-size: 13px;
+                height: 28px;
+            }
+
+            /* Hide desktop filter card */
+            .filter-card {
+                display: none;
+            }
+
+            /* Show mobile filter bar */
+            .mobile-filter-bar {
+                display: flex;
+            }
+
+            .main-content {
+                padding: 16px 0;
+            }
+
+            /* Action Bar */
+            .action-bar {
+                margin-bottom: 12px;
+            }
+
+            .results-info {
+                font-size: 13px;
+            }
+
+            .refresh-btn-subtle {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            /* Table Card */
+            .table-card {
+                border-radius: 12px;
+            }
+
+            /* Mobile table - card style */
+            table {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody {
+                display: block;
+            }
+
+            tr {
+                display: block;
+                padding: 14px;
+                padding-right: 50px;
+                border-bottom: 1px solid var(--apple-border-light);
+                position: relative;
+            }
+
+            tr:last-child {
+                border-bottom: none;
+            }
+
+            td {
+                display: block;
+                padding: 2px 0;
+                border: none;
+                width: 100% !important;
+                font-size: 13px;
+            }
+
+            td:nth-child(1) {
+                padding-bottom: 10px;
+                padding-right: 0;
+            }
+
+            .torrent-name a {
+                white-space: normal;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .torrent-descr {
+                font-size: 11px;
+                white-space: normal;
+                margin-top: 4px;
+            }
+
+            .mobile-meta-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px 16px;
+                margin-top: 8px;
+            }
+
+            td:nth-child(2),
+            td:nth-child(3),
+            td:nth-child(4),
+            td:nth-child(5),
+            td:nth-child(6) {
+                display: inline-flex;
+                align-items: center;
+                width: auto !important;
+                margin: 0;
+                padding: 0;
+                vertical-align: middle;
+            }
+
+            .peer-info {
+                display: inline-flex;
+                gap: 6px;
+                font-size: 12px;
+            }
+
+            .remaining-time {
+                font-size: 12px;
+            }
+
+            td:nth-child(7) {
+                position: absolute;
+                top: 50%;
+                right: 12px;
+                transform: translateY(-50%);
+                width: auto !important;
+            }
+
+            .star-btn {
+                font-size: 20px;
+            }
+
+            .badge {
+                padding: 3px 8px;
+                font-size: 10px;
+                white-space: nowrap;
+            }
+
+            .empty-state {
+                padding: 40px 20px;
+            }
+
+            .empty-state-icon {
+                font-size: 48px;
+            }
+
+            .empty-state p {
+                font-size: 14px;
+            }
+
+            .footer {
+                padding: 16px 0;
+                margin-top: 24px;
+                font-size: 11px;
+            }
+
+            .toast {
+                bottom: 20px;
+                padding: 10px 16px;
+                font-size: 13px;
+                border-radius: 10px;
+                max-width: calc(100% - 32px);
+            }
+
+            .error-banner {
+                padding: 12px 14px;
+                font-size: 13px;
+                border-radius: 10px;
+                margin-bottom: 16px;
+            }
+
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 375px) {
+            .logo-text {
+                font-size: 13px;
+            }
+
+            .nav-stat-value {
+                font-size: 11px;
+            }
+
+            .torrent-name a {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeFilterDrawer()"></div>
+
+    <!-- Filter Drawer (Mobile) -->
+    <div class="filter-drawer" id="filterDrawer">
+        <div class="drawer-handle">
+            <div class="drawer-handle-bar"></div>
+        </div>
+        <div class="drawer-header">
+            <span class="drawer-title" data-i18n="filterTitle">筛选条件</span>
+            <button class="drawer-close" onclick="closeFilterDrawer()">✕</button>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title" data-i18n="filterSize">大小</div>
+            <select class="drawer-select" id="drawerSizeFilter">
+                <option value="all" data-i18n="filterAll">全部</option>
+                <option value="small">< 10 GB</option>
+                <option value="medium">10 - 50 GB</option>
+                <option value="large">50 - 100 GB</option>
+                <option value="xlarge">> 100 GB</option>
+            </select>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title" data-i18n="filterSeeders">做种</div>
+            <select class="drawer-select" id="drawerSeederFilter">
+                <option value="all" data-i18n="filterAll">全部</option>
+                <option value="hot">> 10</option>
+                <option value="normal">5 - 10</option>
+                <option value="rare">1 - 5</option>
+                <option value="dead">0</option>
+            </select>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title" data-i18n="filterRemaining">剩余时间</div>
+            <select class="drawer-select" id="drawerRemainingFilter">
+                <option value="all" data-i18n="filterAll">全部</option>
+                <option value="critical">< 1小时</option>
+                <option value="danger">1-2小时</option>
+                <option value="warning">2-6小时</option>
+                <option value="safe">6-24小时</option>
+                <option value="plenty">> 24小时</option>
+            </select>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title" data-i18n="filterStatus">状态</div>
+            <div class="drawer-pills">
+                <button class="pill drawer-status-btn active" data-status="all" onclick="setDrawerStatus('all', this)" data-i18n="filterAll">全部</button>
+                <button class="pill drawer-status-btn" data-status="leeching" onclick="setDrawerStatus('leeching', this)" data-i18n="filterLeeching">下载中</button>
+                <button class="pill drawer-status-btn" data-status="seeding" onclick="setDrawerStatus('seeding', this)" data-i18n="filterSeeding">做种中</button>
+            </div>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title" data-i18n="filterMode">频道</div>
+            <div class="drawer-pills">
+                <button class="pill drawer-mode-btn active" data-mode="all" onclick="setDrawerMode('all', this)" data-i18n="filterAll">全部</button>
+                <button class="pill drawer-mode-btn" data-mode="normal" onclick="setDrawerMode('normal', this)" data-i18n="filterNormal">综合</button>
+                <button class="pill drawer-mode-btn" data-mode="adult" onclick="setDrawerMode('adult', this)" data-i18n="filterAdult">成人</button>
+            </div>
+        </div>
+
+        <button class="drawer-apply-btn" onclick="applyDrawerFilters()" data-i18n="applyFilters">应用筛选</button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <img src="/static/favicon.png" alt="Logo" class="logo-icon" style="width: 28px; height: 28px; border-radius: 6px;">
+                <span class="logo-text" data-i18n="subtitle">M team 做种助手</span>
+            </div>
+            <div class="nav-right">
+                <div class="nav-stats">
+                    <div class="nav-stat">
+                        <span class="nav-stat-icon">📊</span>
+                        <span class="nav-stat-label" data-i18n="statRatio">分享率</span>
+                        <span class="nav-stat-value ratio">{% if user_profile.share_ratio > 9999 %}∞{% else %}{{ "%.2f"|format(user_profile.share_ratio) }}{% endif %}</span>
+                    </div>
+                    <div class="nav-stat secondary">
+                        <span class="nav-stat-icon">↑</span>
+                        <span class="nav-stat-label" data-i18n="statUpload">上传</span>
+                        <span class="nav-stat-value upload">{{ user_profile.uploaded_display }}</span>
+                    </div>
+                    <div class="nav-stat secondary">
+                        <span class="nav-stat-icon">↓</span>
+                        <span class="nav-stat-label" data-i18n="statDownload">下载</span>
+                        <span class="nav-stat-value download">{{ user_profile.downloaded_display }}</span>
+                    </div>
+                </div>
+                <div class="nav-divider"></div>
+                <div class="nav-actions">
+                    <button class="nav-btn" id="themeToggle" onclick="toggleTheme()">
+                        <span id="themeIcon">☀️</span>
+                    </button>
+                    <button class="nav-btn" id="langToggle" onclick="toggleLanguage()">EN</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Desktop Filter Card -->
+            <div class="filter-card">
+                <!-- Search Row -->
+                <div class="search-row">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索种子名称..." data-placeholder-zh="搜索种子名称..." data-placeholder-en="Search torrents...">
+                    <button class="search-btn" onclick="applyFilters()" data-i18n="searchBtn">搜索</button>
+                </div>
+
+                <!-- Dropdown Grid -->
+                <div class="filter-dropdowns">
+                    <div class="filter-dropdown">
+                        <span class="filter-dropdown-label" data-i18n="filterSize">大小</span>
+                        <select class="filter-select" id="sizeFilter" onchange="applyFilters()">
+                            <option value="all" data-i18n="filterAll">全部</option>
+                            <option value="small">< 10 GB</option>
+                            <option value="medium">10 - 50 GB</option>
+                            <option value="large">50 - 100 GB</option>
+                            <option value="xlarge">> 100 GB</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <span class="filter-dropdown-label" data-i18n="filterSeeders">做种</span>
+                        <select class="filter-select" id="seederFilter" onchange="applyFilters()">
+                            <option value="all" data-i18n="filterAll">全部</option>
+                            <option value="hot">> 10</option>
+                            <option value="normal">5 - 10</option>
+                            <option value="rare">1 - 5</option>
+                            <option value="dead">0</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <span class="filter-dropdown-label" data-i18n="filterRemaining">剩余时间</span>
+                        <select class="filter-select" id="remainingFilter" onchange="applyFilters()">
+                            <option value="all" data-i18n="filterAll">全部</option>
+                            <option value="critical">< 1小时</option>
+                            <option value="danger">1-2小时</option>
+                            <option value="warning">2-6小时</option>
+                            <option value="safe">6-24小时</option>
+                            <option value="plenty">> 24小时</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Button Groups -->
+                <div class="filter-buttons">
+                    <div class="filter-group">
+                        <span class="filter-label" data-i18n="filterStatus">状态</span>
+                        <div class="filter-pills">
+                            <button class="pill status-filter-btn active" data-status="all" onclick="filterByStatus('all', this)" data-i18n="filterAll">全部</button>
+                            <button class="pill status-filter-btn" data-status="leeching" onclick="filterByStatus('leeching', this)" data-i18n="filterLeeching">下载中</button>
+                            <button class="pill status-filter-btn" data-status="seeding" onclick="filterByStatus('seeding', this)" data-i18n="filterSeeding">做种中</button>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label" data-i18n="filterMode">频道</span>
+                        <div class="filter-pills">
+                            <button class="pill mode-filter-btn active" data-mode="all" onclick="filterByMode('all', this)" data-i18n="filterAll">全部</button>
+                            <button class="pill mode-filter-btn" data-mode="normal" onclick="filterByMode('normal', this)" data-i18n="filterNormal">综合</button>
+                            <button class="pill mode-filter-btn" data-mode="adult" onclick="filterByMode('adult', this)" data-i18n="filterAdult">成人</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Filter Bar -->
+            <div class="mobile-filter-bar">
+                <input type="text" class="search-input" id="mobileSearchInput" placeholder="搜索种子名称..." data-placeholder-zh="搜索种子名称..." data-placeholder-en="Search torrents...">
+                <button class="filter-toggle-btn" id="filterToggleBtn" onclick="openFilterDrawer()">
+                    <span>⚙️</span>
+                </button>
+            </div>
+
+            {% if data.error %}
+            <div class="error-banner">
+                <span>⚠️</span>
+                <span>{{ data.error | e }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <div class="results-info">
+                    <span data-i18n="showing">显示</span> <strong id="filteredCount">{{ data.total if data.total is defined else 0 }}</strong> <span data-i18n="results">个结果</span>
+                </div>
+                <button class="refresh-btn-subtle" onclick="manualRefresh()" id="refreshBtn" data-i18n="refresh">刷新数据</button>
+            </div>
+
+            <!-- Table -->
+            {% if data.torrents %}
+            <div class="table-card">
+                <div class="table-container">
+                    <table id="torrentTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('name')" data-i18n="colName">种子名称 <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('size')" data-i18n="colSize">大小 <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('seeders')" data-i18n="colPeers">做种/下载 <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('discount')" data-i18n="colDiscount">优惠 <span class="sort-icon">↕</span></th>
+                                <th onclick="sortTable('remaining')" class="sorted" data-i18n="colRemaining">剩余时间 <span class="sort-icon">↓</span></th>
+                                <th onclick="sortTable('status')" data-i18n="colStatus">状态 <span class="sort-icon">↕</span></th>
+                                <th data-i18n="colFav">收藏</th>
+                            </tr>
+                        </thead>
+                        <tbody id="torrentBody">
+                            {% for torrent in data.torrents %}
+                            <tr data-id="{{ torrent.id | e }}" data-name="{{ torrent.name | e }}" data-discount="{{ torrent.discount | e }}" data-size="{{ torrent.size }}" data-seeders="{{ torrent.seeders }}" data-remaining="{{ torrent.remaining.hours }}" data-status="{{ torrent.user_status | e }}" data-mode="{{ torrent.mode | e }}">
+                                <td class="torrent-name">
+                                    <a href="{{ torrent.detail_url | e }}" target="_blank" rel="noopener noreferrer" title="{{ torrent.name | e }}">{{ torrent.name | e }}</a>
+                                    {% if torrent.small_descr %}
+                                    <div class="torrent-descr">{{ torrent.small_descr | e }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ torrent.size_display | e }}</td>
+                                <td>
+                                    <div class="peer-info">
+                                        <span class="seeders">▲ {{ torrent.seeders }}</span>
+                                        <span class="leechers">▼ {{ torrent.leechers }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if torrent.discount == 'FREE' %}
+                                    <span class="badge badge-free">Free</span>
+                                    {% elif torrent.discount == '_2X_FREE' %}
+                                    <span class="badge badge-2xfree">2xFree</span>
+                                    {% else %}
+                                    <span class="badge">{{ torrent.discount_label.zh | e }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="remaining-time status-{{ torrent.remaining.color }}">
+                                        <span class="status-dot {{ torrent.remaining.color }}"></span>
+                                        <span class="remaining-display" data-zh="{{ torrent.remaining.display | e }}" data-en="{{ torrent.remaining.display_en | e }}">{{ torrent.remaining.display | e }}</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if torrent.user_status == 'seeding' %}
+                                    <span class="badge badge-seeding" data-status-zh="做种中" data-status-en="Seeding">做种中</span>
+                                    {% elif torrent.user_status == 'leeching' %}
+                                    <span class="badge badge-leeching" data-status-zh="下载中" data-status-en="DL">下载中<span class="progress-ring" title="{{ torrent.user_progress|round(0)|int }}%"><svg width="12" height="12" viewBox="0 0 16 16"><circle class="bg" cx="8" cy="8" r="6"></circle><circle class="progress" cx="8" cy="8" r="6" stroke-dasharray="37.7" stroke-dashoffset="{{ 37.7 - (37.7 * torrent.user_progress / 100) }}"></circle></svg></span></span>
+                                    {% else %}
+                                    <span class="badge badge-none" data-status-zh="未下载" data-status-en="Not DL">未下载</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if torrent.is_collected %}
+                                    <button class="star-btn collected" data-id="{{ torrent.id | e }}" data-collected="true" onclick="toggleCollection(this)">★</button>
+                                    {% else %}
+                                    <button class="star-btn" data-id="{{ torrent.id | e }}" data-collected="false" onclick="toggleCollection(this)">☆</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="table-card">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p data-i18n="emptyState">暂无免费种子</p>
+                    <p style="margin-top: 8px; font-size: 14px;" data-i18n="checkConfig">请检查 MT_TOKEN 配置是否正确</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()" title="Back to top">
+        ↑
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>MT-Free-Hunter · <span data-i18n="autoRefresh">自动刷新间隔</span> {{ refresh_interval // 60 }} <span data-i18n="minutes">分钟</span></p>
+            <p style="margin-top: 8px; font-size: 13px; color: var(--apple-text-secondary);">
+                <span data-i18n="rivalRatio">对手分享率</span>: <span style="color: var(--apple-orange); font-weight: 600;">{% if rival_profile.share_ratio > 9999 %}∞{% else %}{{ "%.2f"|format(rival_profile.share_ratio) }}{% endif %}</span>
+                ·
+                <span data-i18n="ratioDiff">差距</span>:
+                {% set diff = user_profile.share_ratio - rival_profile.share_ratio %}
+                {% if diff > 0 %}
+                <span style="color: var(--apple-green); font-weight: 600;">+{{ "%.2f"|format(diff) }}</span>
+                {% elif diff < 0 %}
+                <span style="color: var(--apple-red); font-weight: 600;">{{ "%.2f"|format(diff) }}</span>
+                {% else %}
+                <span style="color: var(--apple-text-tertiary); font-weight: 600;">0.00</span>
+                {% endif %}
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // ============ Translations ============
+        const TRANSLATIONS = {
+            'zh': {
+                subtitle: 'M team 做种助手',
+                total: '总计',
+                refresh: '刷新数据',
+                refreshing: '刷新中...',
+                lastUpdate: '上次更新',
+                noData: '尚未获取数据',
+                nextRefresh: '下次刷新',
+                filterType: '类型',
+                filterSize: '大小',
+                filterSeeders: '做种',
+                filterRemaining: '剩余时间',
+                filterAll: '全部',
+                showing: '显示',
+                results: '个结果',
+                colFav: '收藏',
+                colName: '种子名称',
+                colSize: '大小',
+                colPeers: '做种/下载',
+                colDiscount: '优惠',
+                colStatus: '状态',
+                colRemaining: '剩余时间',
+                emptyState: '暂无免费种子',
+                checkConfig: '请检查 MT_TOKEN 配置是否正确',
+                autoRefresh: '自动刷新间隔',
+                minutes: '分钟',
+                refreshFailed: '刷新失败',
+                filterStatus: '状态',
+                filterLeeching: '下载中',
+                filterSeeding: '做种中',
+                filterMode: '频道',
+                filterNormal: '综合',
+                filterAdult: '成人',
+                collectSuccess: '收藏成功',
+                uncollectSuccess: '取消收藏',
+                collectFailed: '操作失败',
+                statRatio: '分享率',
+                statUpload: '上传',
+                statDownload: '下载',
+                rivalRatio: '对手分享率',
+                ratioDiff: '差距',
+                filterTitle: '筛选条件',
+                applyFilters: '应用筛选',
+                searchBtn: '搜索'
+            },
+            'en': {
+                subtitle: 'M team Seeding Helper',
+                total: 'Total',
+                refresh: 'Refresh',
+                refreshing: 'Refreshing...',
+                lastUpdate: 'Last update',
+                noData: 'No data yet',
+                nextRefresh: 'Next refresh',
+                filterType: 'Type',
+                filterSize: 'Size',
+                filterSeeders: 'Seeders',
+                filterRemaining: 'Time Left',
+                filterAll: 'All',
+                showing: 'Showing',
+                results: 'results',
+                colFav: 'Fav',
+                colName: 'Torrent Name',
+                colSize: 'Size',
+                colPeers: 'S/L',
+                colDiscount: 'Discount',
+                colStatus: 'Status',
+                colRemaining: 'Remaining',
+                emptyState: 'No free torrents',
+                checkConfig: 'Please check if MT_TOKEN is configured',
+                autoRefresh: 'Auto refresh interval',
+                minutes: 'min',
+                refreshFailed: 'Refresh failed',
+                filterStatus: 'Status',
+                filterLeeching: 'Leeching',
+                filterSeeding: 'Seeding',
+                filterMode: 'Channel',
+                filterNormal: 'Normal',
+                filterAdult: 'Adult',
+                collectSuccess: 'Added to favorites',
+                uncollectSuccess: 'Removed',
+                collectFailed: 'Operation failed',
+                statRatio: 'Ratio',
+                statUpload: 'Upload',
+                statDownload: 'Download',
+                rivalRatio: 'Rival Ratio',
+                ratioDiff: 'Gap',
+                filterTitle: 'Filters',
+                applyFilters: 'Apply Filters',
+                searchBtn: 'Search'
+            }
+        };
+
+        // ============ State ============
+        let currentLang = localStorage.getItem('language') || 'zh';
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        let currentDiscount = 'all';
+        let currentStatus = 'all';
+        let currentMode = 'all';
+        let currentSort = { column: 'remaining', direction: 'asc' };
+        let drawerStatus = 'all';
+        let drawerMode = 'all';
+        const REFRESH_INTERVAL = {{ refresh_interval }} * 1000;
+
+        // ============ Theme ============
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', theme);
+            currentTheme = theme;
+        }
+
+        function toggleTheme() {
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        }
+
+        // ============ Language ============
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('language', lang);
+            document.getElementById('langToggle').textContent = lang === 'zh' ? 'EN' : '中文';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (TRANSLATIONS[lang][key]) el.textContent = TRANSLATIONS[lang][key];
+            });
+
+            document.querySelectorAll('.remaining-display').forEach(el => {
+                el.textContent = lang === 'zh' ? el.dataset.zh : el.dataset.en;
+            });
+
+            document.querySelectorAll('.badge[data-status-zh]').forEach(el => {
+                const progressRing = el.querySelector('.progress-ring');
+                const statusText = lang === 'zh' ? el.dataset.statusZh : el.dataset.statusEn;
+                if (progressRing) {
+                    el.innerHTML = '';
+                    el.appendChild(document.createTextNode(statusText));
+                    el.appendChild(progressRing);
+                } else {
+                    el.textContent = statusText;
+                }
+            });
+
+            // Update search placeholders
+            document.querySelectorAll('.search-input').forEach(el => {
+                el.placeholder = lang === 'zh' ? el.dataset.placeholderZh : el.dataset.placeholderEn;
+            });
+        }
+
+        function toggleLanguage() {
+            document.getElementById('loadingOverlay').classList.add('active');
+            localStorage.setItem('language', currentLang === 'zh' ? 'en' : 'zh');
+            setTimeout(() => location.reload(), 150);
+        }
+
+        // ============ Drawer ============
+        function openFilterDrawer() {
+            document.getElementById('drawerOverlay').classList.add('active');
+            document.getElementById('filterDrawer').classList.add('active');
+            document.body.classList.add('drawer-open');
+        }
+
+        function closeFilterDrawer() {
+            document.getElementById('drawerOverlay').classList.remove('active');
+            document.getElementById('filterDrawer').classList.remove('active');
+            document.body.classList.remove('drawer-open');
+        }
+
+        function setDrawerStatus(status, btn) {
+            drawerStatus = status;
+            document.querySelectorAll('.drawer-status-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function setDrawerMode(mode, btn) {
+            drawerMode = mode;
+            document.querySelectorAll('.drawer-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function applyDrawerFilters() {
+            // Sync drawer values to desktop filters
+            document.getElementById('sizeFilter').value = document.getElementById('drawerSizeFilter').value;
+            document.getElementById('seederFilter').value = document.getElementById('drawerSeederFilter').value;
+            document.getElementById('remainingFilter').value = document.getElementById('drawerRemainingFilter').value;
+
+            currentStatus = drawerStatus;
+            currentMode = drawerMode;
+
+            // Sync mobile search to desktop
+            const mobileSearch = document.getElementById('mobileSearchInput').value;
+            document.getElementById('searchInput').value = mobileSearch;
+
+            // Update desktop button states
+            document.querySelectorAll('.status-filter-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.status === currentStatus);
+            });
+            document.querySelectorAll('.mode-filter-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.mode === currentMode);
+            });
+
+            // Apply and close
+            applyFilters();
+            closeFilterDrawer();
+
+            // Update filter button indicator
+            updateFilterButtonState();
+        }
+
+        function updateFilterButtonState() {
+            const hasFilters =
+                document.getElementById('sizeFilter').value !== 'all' ||
+                document.getElementById('seederFilter').value !== 'all' ||
+                document.getElementById('remainingFilter').value !== 'all' ||
+                currentStatus !== 'all' ||
+                currentMode !== 'all';
+
+            document.getElementById('filterToggleBtn').classList.toggle('has-filters', hasFilters);
+        }
+
+        // ============ Filters ============
+        function filterByStatus(status, btn) {
+            currentStatus = status;
+            document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        function filterByMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const sizeFilter = document.getElementById('sizeFilter').value;
+            const seederFilter = document.getElementById('seederFilter').value;
+            const remainingFilter = document.getElementById('remainingFilter').value;
+            const searchTerm = (document.getElementById('searchInput').value || document.getElementById('mobileSearchInput').value || '').toLowerCase();
+            const rows = document.querySelectorAll('#torrentBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                let show = true;
+                const size = parseInt(row.dataset.size);
+                const seeders = parseInt(row.dataset.seeders);
+                const remaining = parseFloat(row.dataset.remaining);
+                const name = (row.dataset.name || '').toLowerCase();
+                const GB = 1024 * 1024 * 1024;
+
+                // Search filter
+                if (searchTerm && !name.includes(searchTerm)) show = false;
+
+                if (show && currentDiscount !== 'all' && row.dataset.discount !== currentDiscount) show = false;
+                if (show && currentStatus !== 'all' && row.dataset.status !== currentStatus) show = false;
+                if (show && currentMode !== 'all' && row.dataset.mode !== currentMode) show = false;
+
+                if (show && sizeFilter !== 'all') {
+                    switch (sizeFilter) {
+                        case 'small': show = size < 10 * GB; break;
+                        case 'medium': show = size >= 10 * GB && size < 50 * GB; break;
+                        case 'large': show = size >= 50 * GB && size < 100 * GB; break;
+                        case 'xlarge': show = size >= 100 * GB; break;
+                    }
+                }
+
+                if (show && seederFilter !== 'all') {
+                    switch (seederFilter) {
+                        case 'hot': show = seeders > 10; break;
+                        case 'normal': show = seeders >= 5 && seeders <= 10; break;
+                        case 'rare': show = seeders >= 1 && seeders < 5; break;
+                        case 'dead': show = seeders === 0; break;
+                    }
+                }
+
+                if (show && remainingFilter !== 'all') {
+                    switch (remainingFilter) {
+                        case 'critical': show = remaining < 1; break;
+                        case 'danger': show = remaining >= 1 && remaining < 2; break;
+                        case 'warning': show = remaining >= 2 && remaining < 6; break;
+                        case 'safe': show = remaining >= 6 && remaining < 24; break;
+                        case 'plenty': show = remaining >= 24; break;
+                    }
+                }
+
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+
+            document.getElementById('filteredCount').textContent = visibleCount;
+            updateFilterButtonState();
+        }
+
+        // ============ Sort ============
+        function sortTable(column) {
+            const tbody = document.getElementById('torrentBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                switch (column) {
+                    case 'name':
+                        aVal = a.querySelector('.torrent-name a').textContent.toLowerCase();
+                        bVal = b.querySelector('.torrent-name a').textContent.toLowerCase();
+                        break;
+                    case 'size': aVal = parseInt(a.dataset.size); bVal = parseInt(b.dataset.size); break;
+                    case 'seeders': aVal = parseInt(a.dataset.seeders); bVal = parseInt(b.dataset.seeders); break;
+                    case 'discount': aVal = a.dataset.discount; bVal = b.dataset.discount; break;
+                    case 'status':
+                        const order = { 'seeding': 2, 'leeching': 1, 'none': 0 };
+                        aVal = order[a.dataset.status] || 0;
+                        bVal = order[b.dataset.status] || 0;
+                        break;
+                    case 'remaining': aVal = parseFloat(a.dataset.remaining); bVal = parseFloat(b.dataset.remaining); break;
+                }
+                if (typeof aVal === 'string') return currentSort.direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+            document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+            const sortedTh = document.querySelector(`th[onclick="sortTable('${column}')"]`);
+            if (sortedTh) {
+                sortedTh.classList.add('sorted');
+                sortedTh.querySelector('.sort-icon').textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+            }
+        }
+
+        // ============ Refresh ============
+        async function manualRefresh() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = TRANSLATIONS[currentLang].refreshing;
+            try {
+                await fetch('/api/refresh', { method: 'POST' });
+                document.getElementById('loadingOverlay').classList.add('active');
+                setTimeout(() => location.reload(), 150);
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = TRANSLATIONS[currentLang].refresh;
+                showToast(TRANSLATIONS[currentLang].refreshFailed, 'error');
+            }
+        }
+
+        // ============ Collection ============
+        async function toggleCollection(btn) {
+            const torrentId = btn.dataset.id;
+            const isCollected = btn.classList.contains('collected');
+            btn.disabled = true;
+            try {
+                const response = await fetch('/api/collection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: torrentId, make: !isCollected })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    btn.classList.toggle('collected');
+                    btn.textContent = btn.classList.contains('collected') ? '★' : '☆';
+                    showToast(btn.classList.contains('collected') ? TRANSLATIONS[currentLang].collectSuccess : TRANSLATIONS[currentLang].uncollectSuccess, 'success');
+                } else {
+                    showToast(result.message || TRANSLATIONS[currentLang].collectFailed, 'error');
+                }
+            } catch (e) {
+                showToast(TRANSLATIONS[currentLang].collectFailed, 'error');
+            }
+            btn.disabled = false;
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        // ============ Back to Top ============
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const backToTopBtn = document.getElementById('backToTop');
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+
+        // ============ Search on Enter ============
+        document.addEventListener('DOMContentLoaded', function() {
+            setTheme(currentTheme);
+            setLanguage(currentLang);
+
+            // Search on Enter key
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') applyFilters();
+            });
+            document.getElementById('mobileSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('searchInput').value = this.value;
+                    applyFilters();
+                }
+            });
+        });
+
+        // Auto refresh
+        setTimeout(() => location.reload(), REFRESH_INTERVAL);
+    </script>
+</body>
+</html>
