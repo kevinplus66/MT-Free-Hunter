@@ -1754,6 +1754,88 @@
         let drawerStatus = 'all';
         let drawerMode = 'all';
         const REFRESH_INTERVAL = {{ refresh_interval }} * 1000;
+        const PAGE_LOAD_TIME = Date.now();
+
+        // ============ Remaining Time Countdown ============
+        function formatRemainingTime(hours, lang) {
+            if (hours <= 0) {
+                return lang === 'zh' ? '已结束' : 'Ended';
+            }
+
+            const totalMinutes = Math.floor(hours * 60);
+            const days = Math.floor(hours / 24);
+            const remainingHours = Math.floor(hours % 24);
+            const minutes = Math.floor((hours * 60) % 60);
+
+            if (lang === 'zh') {
+                if (days > 0) {
+                    return `${days}天${remainingHours}小时`;
+                } else if (hours >= 1) {
+                    return `${Math.floor(hours)}小时${minutes}分钟`;
+                } else {
+                    return `${totalMinutes}分钟`;
+                }
+            } else {
+                if (days > 0) {
+                    return `${days}d ${remainingHours}h`;
+                } else if (hours >= 1) {
+                    return `${Math.floor(hours)}h ${minutes}m`;
+                } else {
+                    return `${totalMinutes}m`;
+                }
+            }
+        }
+
+        function getRemainingColor(hours) {
+            if (hours < 1) return 'red';
+            if (hours < 2) return 'orange';
+            if (hours < 6) return 'yellow';
+            return 'green';
+        }
+
+        function updateAllRemainingTimes() {
+            const elapsedMs = Date.now() - PAGE_LOAD_TIME;
+            const elapsedHours = elapsedMs / (1000 * 60 * 60);
+
+            document.querySelectorAll('#torrentBody tr').forEach(row => {
+                // Use original hours stored at page load (data-original-remaining)
+                // Fall back to data-remaining if original not yet set
+                if (!row.dataset.originalRemaining) {
+                    row.dataset.originalRemaining = row.dataset.remaining;
+                }
+                const originalHours = parseFloat(row.dataset.originalRemaining);
+                const currentHours = Math.max(0, originalHours - elapsedHours);
+
+                // Update data attribute for filtering (current remaining)
+                row.dataset.remaining = currentHours.toString();
+
+                // Update display
+                const displayEl = row.querySelector('.remaining-display');
+                if (displayEl) {
+                    const zhText = formatRemainingTime(currentHours, 'zh');
+                    const enText = formatRemainingTime(currentHours, 'en');
+                    displayEl.dataset.zh = zhText;
+                    displayEl.dataset.en = enText;
+                    displayEl.textContent = currentLang === 'zh' ? zhText : enText;
+                }
+
+                // Update status dot color
+                const remainingTimeEl = row.querySelector('.remaining-time');
+                const statusDot = row.querySelector('.status-dot');
+                if (remainingTimeEl && statusDot) {
+                    const newColor = getRemainingColor(currentHours);
+                    // Remove old color classes
+                    remainingTimeEl.className = remainingTimeEl.className.replace(/status-(green|yellow|orange|red)/g, '').trim();
+                    statusDot.className = statusDot.className.replace(/green|yellow|orange|red/g, '').trim();
+                    // Add new color classes
+                    remainingTimeEl.classList.add(`status-${newColor}`);
+                    statusDot.classList.add(newColor);
+                }
+            });
+        }
+
+        // Update remaining times every second
+        setInterval(updateAllRemainingTimes, 1000);
 
         // ============ Theme ============
         function setTheme(theme) {

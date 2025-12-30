@@ -3,7 +3,7 @@ MT-Free-Hunter - M-Team 免费种子猎手
 自动搜索当前所有 Free / 2xFree 种子
 """
 
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 
 import os
 import re
