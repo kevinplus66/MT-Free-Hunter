@@ -276,7 +276,7 @@ async def search_free_torrents(
     discount_type: str = "FREE",
     mode: str = "normal",
     page: int = 1,
-    page_size: int = 100
+    page_size: int = 200
 ) -> List[Dict]:
     """搜索免费种子"""
     if not MT_TOKEN:
