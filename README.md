@@ -1,5 +1,10 @@
 # MT-Free-Hunter
 
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
+
 M-Team 免费种子猎手 - 自动追踪 Free/2xFree 种子
 
 ---
@@ -43,7 +48,7 @@ M-Team 免费种子猎手 - 自动追踪 Free/2xFree 种子
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/yourusername/MT-Free-Hunter.git
+git clone https://github.com/kevinplus66/MT-Free-Hunter.git
 cd MT-Free-Hunter
 ```
 
@@ -376,7 +381,7 @@ MIT License
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/MT-Free-Hunter.git
+git clone https://github.com/kevinplus66/MT-Free-Hunter.git
 cd MT-Free-Hunter
 ```
 
