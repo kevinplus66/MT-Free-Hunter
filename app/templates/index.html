@@ -768,6 +768,43 @@
             font-weight: 600;
         }
 
+        /* Peer Sort Buttons in Header */
+        .peers-header {
+            cursor: default;
+        }
+
+        .peer-sort-btn {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .peer-sort-btn:hover {
+            background: var(--apple-border-light);
+            color: var(--apple-text);
+        }
+
+        .peer-sort-btn.sorted {
+            color: var(--apple-blue);
+        }
+
+        .peer-sort-btn .sort-icon {
+            margin-left: 2px;
+            opacity: 0.4;
+            font-size: 10px;
+        }
+
+        .peer-sort-btn.sorted .sort-icon {
+            opacity: 1;
+            color: var(--apple-blue);
+        }
+
+        .peer-sort-separator {
+            color: var(--apple-text-tertiary);
+            margin: 0 2px;
+        }
+
         /* ============ Badges ============ */
         .badge {
             display: inline-block;
@@ -1511,7 +1548,11 @@
                             <tr>
                                 <th onclick="sortTable('name')" data-i18n="colName">种子名称 <span class="sort-icon">↕</span></th>
                                 <th onclick="sortTable('size')" data-i18n="colSize">大小 <span class="sort-icon">↕</span></th>
-                                <th onclick="sortTable('seeders')" data-i18n="colPeers">做种/下载 <span class="sort-icon">↕</span></th>
+                                <th class="peers-header">
+                                    <span class="peer-sort-btn" onclick="sortTable('seeders')" title="按做种数排序">做种 <span class="sort-icon" data-sort="seeders">↕</span></span>
+                                    <span class="peer-sort-separator">/</span>
+                                    <span class="peer-sort-btn" onclick="sortTable('leechers')" title="按下载数排序">下载 <span class="sort-icon" data-sort="leechers">↕</span></span>
+                                </th>
                                 <th onclick="sortTable('discount')" data-i18n="colDiscount">优惠 <span class="sort-icon">↕</span></th>
                                 <th onclick="sortTable('remaining')" class="sorted" data-i18n="colRemaining">剩余时间 <span class="sort-icon">↓</span></th>
                                 <th onclick="sortTable('status')" data-i18n="colStatus">状态 <span class="sort-icon">↕</span></th>
@@ -1520,7 +1561,7 @@
                         </thead>
                         <tbody id="torrentBody">
                             {% for torrent in data.torrents %}
-                            <tr data-id="{{ torrent.id | e }}" data-name="{{ torrent.name | e }}" data-discount="{{ torrent.discount | e }}" data-size="{{ torrent.size }}" data-seeders="{{ torrent.seeders }}" data-remaining="{{ torrent.remaining.hours }}" data-status="{{ torrent.user_status | e }}" data-mode="{{ torrent.mode | e }}">
+                            <tr data-id="{{ torrent.id | e }}" data-name="{{ torrent.name | e }}" data-discount="{{ torrent.discount | e }}" data-size="{{ torrent.size }}" data-seeders="{{ torrent.seeders }}" data-leechers="{{ torrent.leechers }}" data-remaining="{{ torrent.remaining.hours }}" data-status="{{ torrent.user_status | e }}" data-mode="{{ torrent.mode | e }}">
                                 <td class="torrent-name">
                                     <a href="{{ torrent.detail_url | e }}" target="_blank" rel="noopener noreferrer" title="{{ torrent.name | e }}">{{ torrent.name | e }}</a>
                                     {% if torrent.small_descr %}
@@ -1925,6 +1966,7 @@
                         break;
                     case 'size': aVal = parseInt(a.dataset.size); bVal = parseInt(b.dataset.size); break;
                     case 'seeders': aVal = parseInt(a.dataset.seeders); bVal = parseInt(b.dataset.seeders); break;
+                    case 'leechers': aVal = parseInt(a.dataset.leechers); bVal = parseInt(b.dataset.leechers); break;
                     case 'discount': aVal = a.dataset.discount; bVal = b.dataset.discount; break;
                     case 'status':
                         const order = { 'seeding': 2, 'leeching': 1, 'none': 0 };
@@ -1938,11 +1980,34 @@
             });
 
             rows.forEach(row => tbody.appendChild(row));
+
+            // Reset all sort indicators
             document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
-            const sortedTh = document.querySelector(`th[onclick="sortTable('${column}')"]`);
-            if (sortedTh) {
-                sortedTh.classList.add('sorted');
-                sortedTh.querySelector('.sort-icon').textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+            document.querySelectorAll('th .sort-icon').forEach(icon => {
+                icon.textContent = '↕';
+            });
+
+            // Reset peer sort buttons
+            document.querySelectorAll('.peer-sort-btn').forEach(btn => {
+                btn.classList.remove('sorted');
+                btn.querySelector('.sort-icon').textContent = '↕';
+            });
+
+            // Update the correct sort indicator
+            if (column === 'seeders' || column === 'leechers') {
+                // Handle peer column sorting
+                const peerBtn = document.querySelector(`.peer-sort-btn .sort-icon[data-sort="${column}"]`);
+                if (peerBtn) {
+                    peerBtn.parentElement.classList.add('sorted');
+                    peerBtn.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+                }
+            } else {
+                // Handle regular column sorting
+                const sortedTh = document.querySelector(`th[onclick="sortTable('${column}')"]`);
+                if (sortedTh) {
+                    sortedTh.classList.add('sorted');
+                    sortedTh.querySelector('.sort-icon').textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+                }
             }
         }
 
