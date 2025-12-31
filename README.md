@@ -1,6 +1,6 @@
 # MT-Free-Hunter
 
-![Version](https://img.shields.io/badge/version-1.5.3-blue.svg)
+![Version](https://img.shields.io/badge/version-1.5.4-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
@@ -345,6 +345,12 @@ A: 收藏 API 需要完整的认证，某些 Token 可能没有此权限。
 ---
 
 ## 更新日志
+
+### v1.5.4 (2025-12)
+- 移除移动端筛选抽屉中的信息图标(ⓘ)
+- 修复开关按钮颜色一致性（从绿色改为蓝色，与其他筛选按钮一致）
+- 在页脚添加上次刷新时间显示
+- 简化 PushPlus 推送告警模板，更简洁易读
 
 ### v1.5.3 (2025-12)
 - 修复自动刷新间隔问题：现在刷新周期更准确（扣除数据获取时间）
@@ -714,6 +720,12 @@ A: The favorite API requires full authentication, some tokens may not have this 
 ---
 
 ## Changelog
+
+### v1.5.4 (2025-12)
+- Remove info icon from mobile filter drawer
+- Fix toggle color consistency (changed from green to blue to match other filter buttons)
+- Add last refresh time display in footer
+- Simplify PushPlus alert templates for better readability
 
 ### v1.5.3 (2025-12)
 - Fix auto-refresh interval: now more accurate (accounts for fetch time)

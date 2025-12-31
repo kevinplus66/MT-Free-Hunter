@@ -3,7 +3,7 @@ MT-Free-Hunter - M-Team 免费种子猎手
 自动搜索当前所有 Free / 2xFree 种子
 """
 
-__version__ = "1.5.3"
+__version__ = "1.5.4"
 
 import os
 import re
@@ -137,6 +137,11 @@ auto_delete_enabled: bool = False
 # 全局 HTTP 客户端（复用连接池）
 http_client: Optional[httpx.AsyncClient] = None
 
+# qBittorrent 会话缓存（避免重复登录导致的问题）
+qb_cached_sid: Optional[str] = None
+qb_sid_created_at: Optional[float] = None
+QB_SESSION_MAX_AGE = 1800  # 会话最大有效期（秒），设为30分钟，比qB的1小时超时更保守
+
 # ============ 模板配置 ============
 templates = Jinja2Templates(directory="app/templates")
 
@@ -161,39 +166,72 @@ def get_headers() -> Dict[str, str]:
 
 
 # ============ qBittorrent 辅助函数 ============
-async def qb_login() -> Optional[str]:
+def qb_clear_session():
+    """清除缓存的 qBittorrent 会话"""
+    global qb_cached_sid, qb_sid_created_at
+    qb_cached_sid = None
+    qb_sid_created_at = None
+    logger.debug("已清除 qBittorrent 缓存会话")
+
+
+def qb_is_session_valid() -> bool:
+    """检查缓存的会话是否仍然有效"""
+    global qb_cached_sid, qb_sid_created_at
+    if not qb_cached_sid or not qb_sid_created_at:
+        return False
+
+    elapsed = datetime.now().timestamp() - qb_sid_created_at
+    return elapsed < QB_SESSION_MAX_AGE
+
+
+async def qb_login(force_new: bool = False) -> Optional[str]:
     """
-    登录 qBittorrent Web UI
+    登录 qBittorrent Web UI（带会话缓存）
+
+    Args:
+        force_new: 是否强制重新登录（忽略缓存）
 
     Returns:
         Optional[str]: 登录成功返回 SID cookie，失败返回 None
     """
+    global qb_cached_sid, qb_sid_created_at
+
     if not QBITTORRENT_URL or not QBITTORRENT_USER or not QBITTORRENT_PASSWORD:
         logger.debug("qBittorrent 配置不完整，跳过登录")
         return None
 
-    try:
-        client = await get_http_client()
-        response = await client.post(
-            f"{QBITTORRENT_URL.rstrip('/')}/api/v2/auth/login",
-            data={"username": QBITTORRENT_USER, "password": QBITTORRENT_PASSWORD},
-            timeout=10.0
-        )
+    # 如果有有效的缓存会话且不是强制重新登录，直接返回
+    if not force_new and qb_is_session_valid():
+        logger.debug("使用缓存的 qBittorrent 会话")
+        return qb_cached_sid
 
-        if response.text == "Ok.":
-            # 从 cookies 中提取 SID
-            sid = response.cookies.get("SID")
-            if sid:
-                logger.info("qBittorrent 登录成功")
-                return sid
+    try:
+        # 创建新的 HTTP 客户端实例，避免 cookie 干扰
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{QBITTORRENT_URL.rstrip('/')}/api/v2/auth/login",
+                data={"username": QBITTORRENT_USER, "password": QBITTORRENT_PASSWORD},
+            )
+
+            if response.text == "Ok.":
+                # 从 cookies 中提取 SID
+                sid = response.cookies.get("SID")
+                if sid:
+                    # 缓存会话
+                    qb_cached_sid = sid
+                    qb_sid_created_at = datetime.now().timestamp()
+                    logger.info("qBittorrent 登录成功（新会话）")
+                    return sid
+                else:
+                    logger.warning("qBittorrent 登录成功但未获取到 SID")
+                    return None
             else:
-                logger.warning("qBittorrent 登录成功但未获取到 SID")
+                logger.error(f"qBittorrent 登录失败: {response.text}")
+                qb_clear_session()  # 清除可能过期的缓存
                 return None
-        else:
-            logger.error(f"qBittorrent 登录失败: {response.text}")
-            return None
     except Exception as e:
         logger.error(f"qBittorrent 登录异常: {e}")
+        qb_clear_session()
         return None
 
 
@@ -211,13 +249,20 @@ async def qb_get_torrents(sid: str) -> List[Dict]:
         return []
 
     try:
-        client = await get_http_client()
-        response = await client.get(
-            f"{QBITTORRENT_URL.rstrip('/')}/api/v2/torrents/info",
-            cookies={"SID": sid},
-            timeout=10.0
-        )
-        return response.json()
+        # 使用独立的客户端，避免 cookie 干扰
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{QBITTORRENT_URL.rstrip('/')}/api/v2/torrents/info",
+                cookies={"SID": sid},
+            )
+
+            # 检查认证失败
+            if response.status_code in (401, 403):
+                logger.warning("qBittorrent 会话已过期，清除缓存")
+                qb_clear_session()
+                return []
+
+            return response.json()
     except Exception as e:
         logger.error(f"获取 qBittorrent 种子列表失败: {e}")
         return []
@@ -238,14 +283,21 @@ async def qb_get_torrent_trackers(torrent_hash: str, sid: str) -> List[Dict]:
         return []
 
     try:
-        client = await get_http_client()
-        response = await client.get(
-            f"{QBITTORRENT_URL.rstrip('/')}/api/v2/torrents/trackers",
-            params={"hash": torrent_hash},
-            cookies={"SID": sid},
-            timeout=10.0
-        )
-        return response.json()
+        # 使用独立的客户端，避免 cookie 干扰
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{QBITTORRENT_URL.rstrip('/')}/api/v2/torrents/trackers",
+                params={"hash": torrent_hash},
+                cookies={"SID": sid},
+            )
+
+            # 检查认证失败
+            if response.status_code in (401, 403):
+                logger.warning("qBittorrent 会话已过期，清除缓存")
+                qb_clear_session()
+                return []
+
+            return response.json()
     except Exception as e:
         logger.error(f"获取种子 tracker 失败: {e}")
         return []
@@ -320,20 +372,26 @@ async def qb_delete_torrent(torrent_hash: str, sid: str, delete_files: bool = Fa
         return False
 
     try:
-        client = await get_http_client()
-        response = await client.post(
-            f"{QBITTORRENT_URL.rstrip('/')}/api/v2/torrents/delete",
-            data={"hashes": torrent_hash, "deleteFiles": "true" if delete_files else "false"},
-            cookies={"SID": sid},
-            timeout=10.0
-        )
+        # 使用独立的客户端，避免 cookie 干扰
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{QBITTORRENT_URL.rstrip('/')}/api/v2/torrents/delete",
+                data={"hashes": torrent_hash, "deleteFiles": "true" if delete_files else "false"},
+                cookies={"SID": sid},
+            )
 
-        if response.status_code == 200:
-            logger.info(f"成功从 qBittorrent 删除种子: {torrent_hash}")
-            return True
-        else:
-            logger.error(f"从 qBittorrent 删除种子失败: {response.text}")
-            return False
+            # 检查认证失败
+            if response.status_code in (401, 403):
+                logger.warning("qBittorrent 会话已过期，清除缓存")
+                qb_clear_session()
+                return False
+
+            if response.status_code == 200:
+                logger.info(f"成功从 qBittorrent 删除种子: {torrent_hash}")
+                return True
+            else:
+                logger.error(f"从 qBittorrent 删除种子失败: {response.text}")
+                return False
     except Exception as e:
         logger.error(f"删除 qBittorrent 种子异常: {e}")
         return False
@@ -832,86 +890,108 @@ async def check_emergency_alerts(torrents: List[Dict]) -> None:
 
                 if remaining_minutes < ALERT_THRESHOLD_MINUTES and remaining_minutes > 0:
                     if can_send_alert(torrent_id, "expiring"):
+                        # 初始化状态变量
                         deleted_successfully = False
-                        deletion_message = ""
+                        torrent_found = False
+                        login_success = False
 
                         # 如果启用自动删除功能，尝试从 qBittorrent 删除该种子
                         if auto_delete_enabled and QBITTORRENT_URL:
                             logger.info(f"自动删除功能已启用（免费即将到期），尝试删除种子 {torrent_id} ({torrent_name[:50]}...)")
                             sid = await qb_login()
                             if sid:
+                                login_success = True
                                 torrent_hash = await qb_find_torrent_by_mteam_id(torrent_id, sid)
                                 if torrent_hash:
+                                    torrent_found = True
                                     deleted_successfully = await qb_delete_torrent(torrent_hash, sid, delete_files=True)
                                     if deleted_successfully:
-                                        deletion_message = '<p style="color:green;"><strong>✓ 已自动删除种子和文件</strong></p>'
                                         logger.info(f"成功自动删除种子 {torrent_id}（免费即将到期）")
                                     else:
-                                        deletion_message = '<p style="color:orange;"><strong>⚠ 尝试删除失败，请手动检查</strong></p>'
                                         logger.warning(f"自动删除种子 {torrent_id} 失败（免费即将到期）")
                                 else:
-                                    deletion_message = '<p style="color:gray;"><em>未在 qBittorrent 中找到该种子</em></p>'
                                     logger.info(f"未在 qBittorrent 中找到种子 {torrent_id}，无需删除")
                             else:
-                                deletion_message = '<p style="color:orange;"><strong>⚠ qBittorrent 登录失败，无法自动删除</strong></p>'
                                 logger.warning("qBittorrent 登录失败，无法执行自动删除")
 
+                        # 生成简化的删除状态消息
+                        if deleted_successfully:
+                            deletion_message = "🗑️ <span style='color:green;'><b>已触发自动删除，安全下车。</b></span>"
+                        elif not auto_delete_enabled:
+                            deletion_message = "⚠️ <span style='color:orange;'>自动删除未开启，建议立即手动检查！</span>"
+                        elif not login_success:
+                            deletion_message = "🚫 <span style='color:red;'>客户端登录失败，无法执行删除。</span>"
+                        elif not torrent_found:
+                            deletion_message = "❓ <span style='color:gray;'>未在客户端找到该种子。</span>"
+                        else:
+                            deletion_message = "⚠️ <span style='color:red;'><b>自动删除失败，请务必手动处理！</b></span>"
+
+                        # 简化的告警模板
                         alerts_to_send.append({
                             "type": "expiring",
-                            "title": "Mteam 做种预警",
-                            "content": f"""
-                                <h3>⚠️ 免费即将到期警告</h3>
-                                <p><strong>种子名称:</strong> {torrent_name}</p>
-                                <p><strong>剩余免费时间:</strong> <span style="color:red;">{remaining['display']}</span></p>
-                                <p><strong>当前下载进度:</strong> <span style="color:orange;">{progress:.1f}%</span></p>
-                                <p><strong>当前优惠:</strong> {current_discount}</p>
-                                {deletion_message}
-                                <hr>
-                                <p style="color:red;"><strong>请注意！</strong>该种子还有不到 {ALERT_THRESHOLD_MINUTES} 分钟结束免费，但你只下载了 {progress:.1f}%！</p>
-                                {'<p>已自动删除该种子和文件，避免免费结束后消耗流量。</p>' if deleted_successfully else '<p>建议立即检查并决定是否继续下载。</p>' if not auto_delete_enabled else ''}
-                            """
+                            "title": "MT免费即将结束",
+                            "content": (
+                                f"<h3>⚠️ 免费即将结束 ({remaining['display']})</h3>"
+                                f"<p><b>{torrent_name}</b></p>"
+                                f"📉 进度: <b style='color:orange;'>{progress:.1f}%</b><br>"
+                                f"⏱️ 剩余: <b style='color:red;'>{remaining['display']}</b><br>"
+                                f"🏷️ 优惠: {current_discount}<br>"
+                                f"<hr>"
+                                f"{deletion_message}"
+                            )
                         })
 
         # 情况 B：免费突然失效（变节检测）
         if not is_free_discount(current_discount) and torrent_id in known_free_torrent_ids:
             if can_send_alert(torrent_id, "changed"):
+                # 初始化状态变量
                 deleted_successfully = False
-                deletion_message = ""
+                torrent_found = False
+                login_success = False
 
                 # 如果启用自动删除功能，尝试从 qBittorrent 删除该种子
                 if auto_delete_enabled and QBITTORRENT_URL:
                     logger.info(f"自动删除功能已启用（免费变收费），尝试删除种子 {torrent_id} ({torrent_name[:50]}...)")
                     sid = await qb_login()
                     if sid:
+                        login_success = True
                         torrent_hash = await qb_find_torrent_by_mteam_id(torrent_id, sid)
                         if torrent_hash:
+                            torrent_found = True
                             deleted_successfully = await qb_delete_torrent(torrent_hash, sid, delete_files=True)
                             if deleted_successfully:
-                                deletion_message = '<p style="color:green;"><strong>✓ 已自动删除种子和文件</strong></p>'
                                 logger.info(f"成功自动删除种子 {torrent_id}（免费变收费）")
                             else:
-                                deletion_message = '<p style="color:orange;"><strong>⚠ 尝试删除失败，请手动检查</strong></p>'
                                 logger.warning(f"自动删除种子 {torrent_id} 失败（免费变收费）")
                         else:
-                            deletion_message = '<p style="color:gray;"><em>未在 qBittorrent 中找到该种子</em></p>'
                             logger.info(f"未在 qBittorrent 中找到种子 {torrent_id}，无需删除")
                     else:
-                        deletion_message = '<p style="color:orange;"><strong>⚠ qBittorrent 登录失败，无法自动删除</strong></p>'
                         logger.warning("qBittorrent 登录失败，无法执行自动删除")
 
+                # 生成简化的删除状态消息
+                if deleted_successfully:
+                    deletion_message = "🗑️ <span style='color:green;'><b>已触发自动删除，安全下车。</b></span>"
+                elif not auto_delete_enabled:
+                    deletion_message = "⚠️ <span style='color:orange;'>自动删除未开启，建议立即手动检查！</span>"
+                elif not login_success:
+                    deletion_message = "🚫 <span style='color:red;'>客户端登录失败，无法执行删除。</span>"
+                elif not torrent_found:
+                    deletion_message = "❓ <span style='color:gray;'>未在客户端找到该种子。</span>"
+                else:
+                    deletion_message = "⚠️ <span style='color:red;'><b>自动删除失败，请务必手动处理！</b></span>"
+
+                # 简化的告警模板
                 alerts_to_send.append({
                     "type": "changed",
-                    "title": "Mteam 做种预警",
-                    "content": f"""
-                        <h3>🚨 种子免费状态变更警告</h3>
-                        <p><strong>种子名称:</strong> {torrent_name}</p>
-                        <p><strong>当前状态:</strong> <span style="color:red;">非免费 ({current_discount or 'NORMAL'})</span></p>
-                        <p><strong>当前下载进度:</strong> <span style="color:orange;">{progress:.1f}%</span></p>
-                        {deletion_message}
-                        <hr>
-                        <p style="color:red;"><strong>警告！</strong>该种子已从免费变为非免费状态，且当前未完成下载，正在消耗上传量/下载量！</p>
-                        {'<p>已自动删除该种子和文件，避免继续消耗流量。</p>' if deleted_successfully else '<p>建议立即检查并决定是否继续下载。</p>' if not auto_delete_enabled else ''}
-                    """
+                    "title": "MT免费优惠已失效",
+                    "content": (
+                        f"<h3>🚨 免费优惠已失效</h3>"
+                        f"<p><b>{torrent_name}</b></p>"
+                        f"📉 进度: <b style='color:orange;'>{progress:.1f}%</b><br>"
+                        f"❌ 状态: <b style='color:red;'>{current_discount or 'NORMAL'}</b><br>"
+                        f"<hr>"
+                        f"{deletion_message}"
+                    )
                 })
 
     # 发送报警（仅当配置了 PUSHPLUS_TOKEN）

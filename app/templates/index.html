@@ -266,7 +266,7 @@
         }
 
         input:checked + .toggle-slider {
-            background-color: var(--apple-green);
+            background-color: var(--apple-blue);
         }
 
         input:checked + .toggle-slider:before {
@@ -1474,6 +1474,17 @@
             </div>
         </div>
 
+        <div class="drawer-section">
+            <div class="drawer-section-title" data-i18n="autoDelete">自动删除</div>
+            <div class="toggle-container">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="drawerAutoDeleteToggle" onchange="toggleAutoDeleteFromDrawer()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label" style="margin-left: 8px;" data-i18n="autoDeleteDesc">免费变节时删除未完成下载</span>
+            </div>
+        </div>
+
         <button class="drawer-apply-btn" onclick="applyDrawerFilters()" data-i18n="applyFilters">应用筛选</button>
     </div>
 
@@ -1504,15 +1515,6 @@
                 </div>
                 <div class="nav-divider"></div>
                 <div class="nav-actions">
-                    <div class="toggle-container">
-                        <span class="toggle-label" data-i18n="autoDelete">自动删除</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="autoDeleteToggle" onchange="toggleAutoDelete()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-info-icon" title="当免费状态变为非免费且未下载完时，自动从qBittorrent删除种子 | Auto-delete torrents from qBittorrent when free status changes and download is incomplete">ⓘ</span>
-                    </div>
-                    <div class="nav-divider"></div>
                     <button class="nav-btn" id="themeToggle" onclick="toggleTheme()">
                         <span id="themeIcon">☀️</span>
                     </button>
@@ -1584,6 +1586,15 @@
                             <button class="pill mode-filter-btn active" data-mode="all" onclick="filterByMode('all', this)" data-i18n="filterAll">全部</button>
                             <button class="pill mode-filter-btn" data-mode="normal" onclick="filterByMode('normal', this)" data-i18n="filterNormal">综合</button>
                             <button class="pill mode-filter-btn" data-mode="adult" onclick="filterByMode('adult', this)" data-i18n="filterAdult">成人</button>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label" data-i18n="autoDelete">自动删除</span>
+                        <div class="toggle-container" style="margin-left: 0;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="autoDeleteToggle" onchange="toggleAutoDelete()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -1705,7 +1716,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>MT-Free-Hunter · <span data-i18n="autoRefresh">自动刷新间隔</span> {{ refresh_interval // 60 }} <span data-i18n="minutes">分钟</span></p>
+            <p>MT-Free-Hunter · <span data-i18n="autoRefresh">自动刷新间隔</span> {{ refresh_interval // 60 }} <span data-i18n="minutes">分钟</span> · <span data-i18n="lastRefresh">上次刷新</span> {{ data.last_update if data.last_update else '-' }}</p>
             <p style="margin-top: 8px; font-size: 13px; color: var(--apple-text-secondary);">
                 <span data-i18n="rivalRatio">对手分享率</span>: <span style="color: var(--apple-orange); font-weight: 600;">{% if rival_profile.share_ratio > 9999 %}∞{% else %}{{ "%.2f"|format(rival_profile.share_ratio) }}{% endif %}</span>
                 ·
@@ -1731,6 +1742,7 @@
                 refresh: '刷新数据',
                 refreshing: '刷新中...',
                 lastUpdate: '上次更新',
+                lastRefresh: '上次刷新',
                 noData: '尚未获取数据',
                 nextRefresh: '下次刷新',
                 filterType: '类型',
@@ -1770,6 +1782,7 @@
                 applyFilters: '应用筛选',
                 searchBtn: '搜索',
                 autoDelete: '自动删除',
+                autoDeleteDesc: '免费变节时删除未完成下载',
                 autoDeleteEnabled: '自动删除已启用',
                 autoDeleteDisabled: '自动删除已禁用',
                 autoDeleteError: '切换失败，请检查配置'
@@ -1780,6 +1793,7 @@
                 refresh: 'Refresh',
                 refreshing: 'Refreshing...',
                 lastUpdate: 'Last update',
+                lastRefresh: 'Last refresh',
                 noData: 'No data yet',
                 nextRefresh: 'Next refresh',
                 filterType: 'Type',
@@ -1819,6 +1833,7 @@
                 applyFilters: 'Apply Filters',
                 searchBtn: 'Search',
                 autoDelete: 'Auto Delete',
+                autoDeleteDesc: 'Delete incomplete when free ends',
                 autoDeleteEnabled: 'Auto-delete enabled',
                 autoDeleteDisabled: 'Auto-delete disabled',
                 autoDeleteError: 'Toggle failed, please check config'
@@ -2222,25 +2237,44 @@
 
         // ============ Auto Delete ============
         async function loadAutoDeleteStatus() {
-            // Load auto-delete status from backend
+            // Load auto-delete status from backend and sync both toggles
             try {
                 const response = await fetch('/api/auto-delete/status');
                 const result = await response.json();
-                const toggle = document.getElementById('autoDeleteToggle');
+                const desktopToggle = document.getElementById('autoDeleteToggle');
+                const drawerToggle = document.getElementById('drawerAutoDeleteToggle');
 
-                if (toggle) {
-                    toggle.checked = result.enabled || false;
-                    toggle.disabled = !result.qbittorrent_configured;
+                if (desktopToggle) {
+                    desktopToggle.checked = result.enabled || false;
+                    desktopToggle.disabled = !result.qbittorrent_configured;
+                }
+                if (drawerToggle) {
+                    drawerToggle.checked = result.enabled || false;
+                    drawerToggle.disabled = !result.qbittorrent_configured;
                 }
             } catch (e) {
                 console.error('Failed to load auto-delete status:', e);
             }
         }
 
+        function syncAutoDeleteToggles(enabled, disabled) {
+            // Sync both toggle states
+            const desktopToggle = document.getElementById('autoDeleteToggle');
+            const drawerToggle = document.getElementById('drawerAutoDeleteToggle');
+            if (desktopToggle) {
+                desktopToggle.checked = enabled;
+                if (disabled !== undefined) desktopToggle.disabled = disabled;
+            }
+            if (drawerToggle) {
+                drawerToggle.checked = enabled;
+                if (disabled !== undefined) drawerToggle.disabled = disabled;
+            }
+        }
+
         async function toggleAutoDelete() {
-            // Toggle auto-delete feature
+            // Toggle auto-delete feature (called from desktop filter bar)
             const toggle = document.getElementById('autoDeleteToggle');
-            const originalState = toggle.checked;
+            const originalState = !toggle.checked; // State before change
 
             try {
                 const response = await fetch('/api/auto-delete/toggle', {
@@ -2250,19 +2284,49 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    toggle.checked = result.enabled;
+                    syncAutoDeleteToggles(result.enabled);
                     const message = result.enabled ?
                         TRANSLATIONS[currentLang].autoDeleteEnabled :
                         TRANSLATIONS[currentLang].autoDeleteDisabled;
                     showToast(message, 'success');
                 } else {
                     // Revert toggle state on failure
-                    toggle.checked = !originalState;
+                    syncAutoDeleteToggles(originalState);
                     showToast(result.message || TRANSLATIONS[currentLang].autoDeleteError, 'error');
                 }
             } catch (e) {
                 // Revert toggle state on error
-                toggle.checked = !originalState;
+                syncAutoDeleteToggles(originalState);
+                showToast(TRANSLATIONS[currentLang].autoDeleteError, 'error');
+            }
+        }
+
+        async function toggleAutoDeleteFromDrawer() {
+            // Toggle auto-delete feature (called from mobile drawer)
+            const toggle = document.getElementById('drawerAutoDeleteToggle');
+            const originalState = !toggle.checked; // State before change
+
+            try {
+                const response = await fetch('/api/auto-delete/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    syncAutoDeleteToggles(result.enabled);
+                    const message = result.enabled ?
+                        TRANSLATIONS[currentLang].autoDeleteEnabled :
+                        TRANSLATIONS[currentLang].autoDeleteDisabled;
+                    showToast(message, 'success');
+                } else {
+                    // Revert toggle state on failure
+                    syncAutoDeleteToggles(originalState);
+                    showToast(result.message || TRANSLATIONS[currentLang].autoDeleteError, 'error');
+                }
+            } catch (e) {
+                // Revert toggle state on error
+                syncAutoDeleteToggles(originalState);
                 showToast(TRANSLATIONS[currentLang].autoDeleteError, 'error');
             }
         }
